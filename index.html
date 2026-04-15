@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conditionals Game</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --glass: rgba(255, 255, 255, 0.95);
+            --primary: #6e8efb;
+            --accent: #a777e3;
+            --success: #00b894;
+            --error: #ff7675;
+            --text: #2d3436;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            color: var(--text);
+        }
+
+        .container {
+            background: var(--glass);
+            width: 90%;
+            max-width: 500px;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 6px;
+            background: var(--accent);
+            transition: width 0.4s ease;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            text-align: center;
+            margin-bottom: 30px;
+            background: var(--bg-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .question-box { margin-bottom: 25px; min-height: 80px; }
+
+        .question-text {
+            font-size: 1.2rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+
+        .option-btn {
+            background: #fff;
+            border: 2px solid #eee;
+            padding: 15px 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            background: #f8f9ff;
+        }
+
+        .option-btn.correct {
+            background-color: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+
+        .option-btn.wrong {
+            background-color: var(--error);
+            color: white;
+            border-color: var(--error);
+        }
+
+        #feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            display: none;
+            line-height: 1.5;
+        }
+
+        .next-btn {
+            width: 100%;
+            background: var(--bg-gradient);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 25px;
+            cursor: pointer;
+            display: none;
+            box-shadow: 0 4px 15px rgba(110, 142, 251, 0.4);
+        }
+
+        .stats {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: #636e72;
+        }
+
+        /* Estilo para los créditos finales */
+        .credits {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #636e72;
+            line-height: 1.6;
+        }
+
+        .credits strong {
+            color: var(--accent);
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .author-list {
+            font-style: italic;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+
+<div class="container">
+    <div class="progress-bar" id="progress"></div>
+    <h1>Conditionals Game</h1>
+    
+    <div id="quiz-ui">
+        <div class="question-box">
+            <div id="question" class="question-text">Preparando preguntas...</div>
+        </div>
+
+        <div id="options" class="options-grid"></div>
+
+        <div id="feedback"></div>
+
+        <button id="next-button" class="next-btn" onclick="handleNext()">Continuar →</button>
+
+        <div class="stats">
+            <span id="counter">Pregunta 1/10</span>
+            <span id="score-live">Puntos: 0</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        { q: "If you mix blue and yellow, you _______ green.", a: "get", opts: ["get", "will get", "got", "gets"], type: "Zero" },
+        { q: "If I _______ time tomorrow, I'll help you.", a: "have", opts: ["will have", "have", "had", "am having"], type: "First" },
+        { q: "What _______ you do if you won the lottery?", a: "would", opts: ["will", "would", "do", "did"], type: "Second" },
+        { q: "If they _______ the map, they wouldn't have got lost.", a: "had brought", opts: ["brought", "bring", "had brought", "have brought"], type: "Third" },
+        { q: "I would travel more if I _______ afraid of flying.", a: "weren't", opts: ["am not", "don't be", "weren't", "won't be"], type: "Second" },
+        { q: "If she _______ to bed earlier, she wouldn't be so tired now.", a: "had gone", opts: ["goes", "went", "had gone", "has gone"], type: "Third/Mixed" },
+        { q: "Ice _______ if the temperature rises above 0°C.", a: "melts", opts: ["melt", "melts", "will melt", "melted"], type: "Zero" },
+        { q: "If it _______ sunny this weekend, we'll go to the park.", a: "is", opts: ["is", "will be", "be", "was"], type: "First" },
+        { q: "If I _______ you, I'd take the job offer.", a: "were", opts: ["was", "am", "were", "be"], type: "Second" },
+        { q: "Unless you _______ now, you will be late.", a: "leave", opts: ["leave", "don't leave", "will leave", "left"], type: "First" }
+    ];
+
+    let current = 0;
+    let score = 0;
+
+    function init() {
+        const qObj = quizData[current];
+        document.getElementById('question').innerText = qObj.q;
+        document.getElementById('progress').style.width = `${((current + 1) / quizData.length) * 100}%`;
+        document.getElementById('counter').innerText = `Pregunta ${current + 1}/${quizData.length}`;
+        
+        const optsContainer = document.getElementById('options');
+        optsContainer.innerHTML = '';
+        
+        qObj.opts.forEach(opt => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.innerText = opt;
+            btn.onclick = () => check(opt, btn);
+            optsContainer.appendChild(btn);
+        });
+
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('next-button').style.display = 'none';
+    }
+
+    function check(choice, btn) {
+        const correct = quizData[current].a;
+        const allBtns = document.querySelectorAll('.option-btn');
+        const feedback = document.getElementById('feedback');
+
+        allBtns.forEach(b => b.disabled = true);
+
+        if(choice === correct) {
+            btn.classList.add('correct');
+            score++;
+            document.getElementById('score-live').innerText = `Puntos: ${score}`;
+            feedback.innerHTML = `<strong>¡Correcto!</strong> Es un ejemplo de ${quizData[current].type} Conditional.`;
+            feedback.style.background = "#e6faf5";
+            feedback.style.color = "#00b894";
+        } else {
+            btn.classList.add('wrong');
+            feedback.innerHTML = `<strong>Incorrecto.</strong> La respuesta era: <em>${correct}</em>.`;
+            feedback.style.background = "#fff5f5";
+            feedback.style.color = "#ff7675";
+            allBtns.forEach(b => { if(b.innerText === correct) b.classList.add('correct'); });
+        }
+        
+        feedback.style.display = 'block';
+        document.getElementById('next-button').style.display = 'block';
+    }
+
+    function handleNext() {
+        current++;
+        if(current < quizData.length) {
+            init();
+        } else {
+            showResults();
+        }
+    }
+
+    function showResults() {
+        const container = document.getElementById('quiz-ui');
+        const percent = (score / quizData.length) * 100;
+        let msg = percent > 70 ? "¡Excelente trabajo! 🌟" : "¡Sigue practicando! 📚";
+        
+        container.innerHTML = `
+            <div class="result-screen" style="text-align:center">
+                <h2>${msg}</h2>
+                <p style="font-size: 3rem; margin: 10px 0;">${score}/${quizData.length}</p>
+                <p>Lograste un ${percent}% de efectividad.</p>
+                
+                <div class="credits">
+                    <strong>Creado por:</strong>
+                    <div class="author-list">
+                        Sofía Cruz<br>
+                        Mariana Cruz<br>
+                        Mariana Fontecha<br>
+                        Marlly Urquijo<br>
+                        Naia Pineda<br>
+                        Santiago Osorio<br>
+                        <strong>1102 JT</strong>
+                    </div>
+                </div>
+
+                <button onclick="location.reload()" class="next-btn" style="display:block">Reiniciar Trivia</button>
+            </div>
+        `;
+    }
+
+    init();
+</script>
+
+</body>
+</html>
+
+
